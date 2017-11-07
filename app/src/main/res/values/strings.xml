@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">IdeaScape</string>
     <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_main2">Main2Activity</string>
+    <string name="DarkBlue">#20375e</string>
+    <string name="White">#ffffff</string>
+    <string name="LightBlue">#d7e1ef</string>
 </resources>
