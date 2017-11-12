@@ -6,7 +6,9 @@ import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -51,29 +53,54 @@ public class NoteBase extends Observable {
                     String[] valuesLine = line.split(";");
 
                     if (!(this.tagDictionary.keySet().contains(valuesLine[valuesLine.length-1]))) {
-                        this.tagDictionary.put(valuesLine[valuesLine.length-1], new ArrayList<Note>());
-                        this.tagDictionary.get(valuesLine[valuesLine.length-1]).add(new Note(context, attrs, valuesLine));
+                        this.tagDictionary.put(valuesLine[7], new ArrayList<Note>());
                     }
 
-
+                    this.tagDictionary.get(valuesLine[valuesLine.length-1]).add(new Note(context, attrs, valuesLine));
                 }
             }
-
         }
         catch (IOException ioe) {
             Log.e(getTimeStamp(), ioe.getMessage());
         }
-
     }
 
 
     public void saveNotes() {
         // Format (8 entries): USER;TIMESTAMP;CONTENT;TITLE;POSITION_X;POSITION_Y;STATUS;TAG
+        StringBuilder sb = new StringBuilder();
+        try {
+            File file = new File(this.context.getFilesDir() + this.user + "-notes.csv");
+            if (!(file.exists())) {
+                boolean fileCreated = file.createNewFile();
+                if (fileCreated) {
+                    Log.d("File Created", this.user + "-notes.csv");
+                }
+            }
+
+            for (String key : tagDictionary.keySet()) {
+                for (Note note : tagDictionary.get(key)) {
+                    for (String s : note.saveNote()) {
+                        sb.append(s);
+                        sb.append(";");
+                    }
+                    sb.append("\r\n");
+                }
+            }
+
+            FileWriter fw = new FileWriter(this.context.getFilesDir() + this.user + "-notes.csv", false);
+            // Write content to file.
+            fw.write(sb.toString());
+            fw.flush();
+            fw.close();
+
+
+        }
+        catch (IOException ioe) {
+            Log.e(getTimeStamp(), ioe.getMessage());
+        }
     }
 
-    public void saveNotes(String user) {
-
-    }
 
     private String getTimeStamp() {
         return new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
