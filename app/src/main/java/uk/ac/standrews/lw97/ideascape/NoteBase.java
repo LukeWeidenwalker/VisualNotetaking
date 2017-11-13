@@ -1,12 +1,14 @@
 package uk.ac.standrews.lw97.ideascape;
 
 import android.content.Context;
+import android.graphics.Canvas;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -17,33 +19,39 @@ import java.util.HashMap;
 import java.util.Observable;
 
 
-public class NoteBase extends Observable {
+public class NoteBase{
     // Datastructure to hold all Notes a user has made on a canvas
     private String user;
-    private ArrayList<Note> notes;
     // Organise notes into tag groups to allow for more efficient retrieval.
     private HashMap<String, ArrayList<Note>> tagDictionary;
     private Context context;
     private AttributeSet attrs;
 
 
-    NoteBase(Context context) {
-        this.notes = new ArrayList<>();
-    }
+    // Constructor
 
-
-    NoteBase(Context context, String user) {
+    public NoteBase(Context context, String user) {
         this.context = context;
         this.user = user;
-        this.notes = new ArrayList<>();
         this.tagDictionary = new HashMap<>();
         loadNotes();
     }
 
 
+    public void addNote(Note note) {
+        if(this.tagDictionary.keySet().contains(note.getTag())) {
+            this.tagDictionary.get(note.getTag()).add(note);
+        }
+        else {
+            this.tagDictionary.put(note.getTag(), new ArrayList<Note>());
+            this.tagDictionary.get(note.getTag()).add(note);
+        }
+    }
+
+
     public void loadNotes() {
         // TODO: Improve this so that some characters are escaped: https://stackoverflow.com/questions/769621/dealing-with-commas-in-a-csv-file
-        BufferedReader reader = null;
+        BufferedReader reader;
         try {
             File file = new File(this.context.getFilesDir(), this.user + "-notes.csv");
             if (file.exists()) {
@@ -93,8 +101,6 @@ public class NoteBase extends Observable {
             fw.write(sb.toString());
             fw.flush();
             fw.close();
-
-
         }
         catch (IOException ioe) {
             Log.e(getTimeStamp(), ioe.getMessage());
@@ -102,11 +108,16 @@ public class NoteBase extends Observable {
     }
 
 
-    private String getTimeStamp() {
+    public static String getTimeStamp() {
         return new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
     }
 
-    public ArrayList<Note> getTagNotes(int tag) {
+    public ArrayList<Note> getTagNotes(String tag) {
         return this.tagDictionary.get(tag);
     }
+
+    public HashMap<String, ArrayList<Note>> getAllNotes() {
+        return this.tagDictionary;
+    }
+
 }

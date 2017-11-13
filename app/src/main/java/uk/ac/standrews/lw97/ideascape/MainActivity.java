@@ -30,7 +30,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void launchUniverseActivity() {
+        //Intent intent = new Intent(this, UniverseActivity.class);
         Intent intent = new Intent(this, UniverseActivity.class);
+
         intent.putExtra("user", "Luki");
         startActivity(intent);
     }
