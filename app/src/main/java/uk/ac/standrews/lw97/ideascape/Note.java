@@ -54,7 +54,7 @@ public class Note extends View {
 
     public void setupDrawing() {
         // Setup how it will be drawn
-        this.sideLength = 40;
+        this.sideLength = 100;
 
         this.rectangle = new Rect(this.position[0], this.position[1], this.position[0] + sideLength, this.position[1] + sideLength);
         this.paint = new Paint();
@@ -98,7 +98,7 @@ public class Note extends View {
     }
 
     private boolean checkPositionOverlap(float x, float y) {
-        return (x > this.position[0] && x < this.position[0] && y > this.position[1] && y < this.position[1]);
+        return (x > this.position[0] && x < this.position[0] + this.sideLength && y > this.position[1] && y < this.position[1] + this.sideLength);
     }
 
     @Override
@@ -112,6 +112,8 @@ public class Note extends View {
     public boolean onTouchEvent(MotionEvent event) {
         float x = event.getX();
         float y = event.getY();
+        Log.d("DEBUG", "Registered touch");
+        Log.d("DEBUG", String.valueOf(x) + ", " + String.valueOf(y));
 
         if(checkPositionOverlap(x, y)) {
             switch (event.getAction()) {

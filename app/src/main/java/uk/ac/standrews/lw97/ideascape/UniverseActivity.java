@@ -36,31 +36,15 @@ public class UniverseActivity extends AppCompatActivity {
                 fl.addView(note);
             }
         }
+        fl.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                Log.d("DEBUG", "Registered touch");
+
+                return false;
+            }
+        });
+
         setContentView(fl);
     }
-
-    public boolean onTouchEvent(MotionEvent event) {
-        // Detecting touch gestures
-        float x = event.getX();
-        float y = event.getY();
-
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-
-
-                //touch_start(x, y);
-                //invalidate();
-                break;
-            case MotionEvent.ACTION_MOVE:
-                //touch_move(x, y);
-                //invalidate();
-                break;
-            case MotionEvent.ACTION_UP:
-                //touch_up();
-                //invalidate();
-                break;
-        }
-        return true;
-    }
-
 }
