@@ -6,21 +6,4 @@
     android:background="#0099cc"
     tools:context="uk.ac.standrews.lw97.ideascape.UniverseActivity">
 
-    <uk.ac.standrews.lw97.ideascape.Note
-        android:id="@+id/note2"
-        android:layout_width="367dp"
-        android:layout_height="208dp" />
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <ImageView
-            android:id="@+id/imageView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/ic_launcher_background"
-            app:srcCompat="@drawable/ic_launcher_background" />
-    </FrameLayout>
-
 </LinearLayout>

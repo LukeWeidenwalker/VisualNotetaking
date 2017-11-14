@@ -1,8 +1,9 @@
 package uk.ac.standrews.lw97.ideascape;
 
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.view.MotionEvent;
-import android.view.View;
 import android.widget.FrameLayout;
 
 
@@ -10,6 +11,7 @@ public class NotesGroup extends FrameLayout {
 
     NotesGroup(Context context) {
         super(context);
+        this.addView(new Background(context, Color.BLACK));
     }
 
 
@@ -24,5 +26,11 @@ public class NotesGroup extends FrameLayout {
             }
         }
         return super.onInterceptTouchEvent(ev);
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+
     }
 }

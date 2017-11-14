@@ -1,13 +1,8 @@
 package uk.ac.standrews.lw97.ideascape;
 
-import android.graphics.Canvas;
-import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
-import android.widget.FrameLayout;
 
 
 public class UniverseActivity extends AppCompatActivity {
@@ -29,7 +24,6 @@ public class UniverseActivity extends AppCompatActivity {
 
         NotesGroup notesGroup = new NotesGroup(this);
 
-        notesGroup.addView(new Background(this, Color.BLACK));
         for (String key : this.notebase.getAllNotes().keySet()) {
             for (Note note : this.notebase.getAllNotes().get(key)) {
                 Log.d("DEBUG", "Added note to layout");

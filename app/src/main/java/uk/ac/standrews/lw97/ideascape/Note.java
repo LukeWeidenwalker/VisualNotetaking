@@ -14,14 +14,18 @@ import android.view.View;
 public class Note extends View {
     String title;
     String content;
-    int[] position;
     String tag;
     int status;
     String timestamp;
     String user;
 
+    int[] position;
+    int midX;
+    int midY;
+
     private Rect hitbox;
-    private Paint paint;
+    private Paint paintRect;
+    private Paint paintText;
     int sideLength;
 
     int startDragX = 0;
@@ -65,8 +69,12 @@ public class Note extends View {
         // Setup how it will be drawn
         this.sideLength = 300;
         this.hitbox = new Rect(this.position[0], this.position[1], this.position[0] + sideLength, this.position[1] + sideLength);
-        this.paint = new Paint();
-        this.paint.setColor(Color.GRAY);
+        this.midX = this.position[0] + (this.sideLength / 2);
+        this.midY = this.position[1] + (this.sideLength / 2);
+        this.paintRect = new Paint();
+        this.paintRect.setColor(Color.GRAY);
+        this.paintText = new Paint();
+        this.paintText.setColor(Color.WHITE);
     }
 
     public String getTag() {
@@ -96,10 +104,12 @@ public class Note extends View {
 
     public void changeX(int deltaX) {
         this.position[0] += deltaX;
+        this.midX += deltaX;
     }
 
     public void changeY(int deltaY) {
         this.position[1] += deltaY;
+        this.midY += deltaY;
     }
 
     public void setTag(String tag) {
@@ -120,8 +130,8 @@ public class Note extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        canvas.drawRect(this.hitbox, this.paint);
-        //canvas.drawText(this.title, this.position[0], this.position[1], this.paintWhite);
+        canvas.drawRect(this.hitbox, this.paintRect);
+        canvas.drawText(this.title, this.midX, this.midY, this.paintText);
     }
 
     @Override
@@ -143,12 +153,12 @@ public class Note extends View {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 if(checkPositionOverlap(xEvent, yEvent)) {
-                        Log.d("DEBUG", "Note selected!");
-                        this.selected = true;
-                        this.lastDragX = (int) event.getX();
-                        this.lastDragY = (int) event.getY();
-                        this.paint.setColor(Color.BLUE);
-                        invalidate();
+                    Log.d("DEBUG", "Note selected!");
+                    this.selected = true;
+                    this.lastDragX = (int) event.getX();
+                    this.lastDragY = (int) event.getY();
+                    this.paintRect.setColor(Color.BLUE);
+                    invalidate();
                 }
                 break;
 
@@ -174,7 +184,7 @@ public class Note extends View {
             case MotionEvent.ACTION_UP:
                 if(this.selected) {
                     Log.d("DEBUG", "TOUCHUP");
-                    this.paint.setColor(Color.GRAY);
+                    this.paintRect.setColor(Color.GRAY);
                     this.selected = false;
                     invalidate();
                 }
