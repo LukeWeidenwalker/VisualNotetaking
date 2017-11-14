@@ -36,6 +36,7 @@ public class UniverseActivity extends AppCompatActivity {
                 fl.addView(note);
             }
         }
+
         fl.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {

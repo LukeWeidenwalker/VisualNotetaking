@@ -20,11 +20,18 @@ public class Note extends View {
     String timestamp;
     String user;
 
-    private Rect rectangle;
+    private Rect hitbox;
     private Paint paint;
     int sideLength;
 
+    int startDragX = 0;
+    int startDragY = 0;
+    int lastDragX = 0;
+    int lastDragY = 0;
 
+    int endDragX;
+    int endDragY;
+    boolean selected;
 
     public Note(Context context, AttributeSet attrs, String user, int[] position) {
         super(context, attrs);
@@ -35,6 +42,7 @@ public class Note extends View {
         this.status = 1;
         this.timestamp = NoteBase.getTimeStamp();
         this.user = user;
+        this.selected = false;
         setupDrawing();
     }
 
@@ -49,14 +57,14 @@ public class Note extends View {
         this.position[1] = Integer.parseInt(valuesLine[5]);
         this.status = Integer.parseInt(valuesLine[6]);
         this.tag = valuesLine[7];
+        this.selected = false;
         setupDrawing();
     }
 
     public void setupDrawing() {
         // Setup how it will be drawn
-        this.sideLength = 100;
-
-        this.rectangle = new Rect(this.position[0], this.position[1], this.position[0] + sideLength, this.position[1] + sideLength);
+        this.sideLength = 300;
+        this.hitbox = new Rect(this.position[0], this.position[1], this.position[0] + sideLength, this.position[1] + sideLength);
         this.paint = new Paint();
         this.paint.setColor(Color.GRAY);
     }
@@ -86,6 +94,14 @@ public class Note extends View {
         invalidate();
     }
 
+    public void changeX(int deltaX) {
+        this.position[0] += deltaX;
+    }
+
+    public void changeY(int deltaY) {
+        this.position[1] += deltaY;
+    }
+
     public void setTag(String tag) {
         this.tag = tag;
         invalidate();
@@ -104,47 +120,67 @@ public class Note extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        canvas.drawRect(this.rectangle, this.paint);
+        canvas.drawRect(this.hitbox, this.paint);
         //canvas.drawText(this.title, this.position[0], this.position[1], this.paintWhite);
     }
 
     @Override
+    public void invalidate() {
+        super.invalidate();
+        this.hitbox = new Rect(this.position[0], this.position[1], this.position[0] + sideLength, this.position[1] + sideLength);
+    }
+
+    @Override
     public boolean onTouchEvent(MotionEvent event) {
-        float x = event.getX();
-        float y = event.getY();
         Log.d("DEBUG", "Registered touch");
-        Log.d("DEBUG", String.valueOf(x) + ", " + String.valueOf(y));
+        Log.d("DEBUG", String.valueOf(event.getX()) + ", " + String.valueOf(event.getY()));
 
-        if(checkPositionOverlap(x, y)) {
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    Log.d("DEBUG", "TOUCHDOWN");
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                if(checkPositionOverlap((int)event.getX(), (int)event.getY())) {
+                        Log.d("DEBUG", "Note selected!");
+                        this.selected = true;
+                        this.lastDragX = (int) event.getX();
+                        this.lastDragY = (int) event.getY();
 
-                    this.paint.setColor(Color.GRAY);
-                    //touch_start(x, y);
-                    invalidate();
-                    break;
+                        this.paint.setColor(Color.BLUE);
+                        invalidate();
+                }
+                break;
+
                 case MotionEvent.ACTION_MOVE:
-                    Log.d("DEBUG", "TOUCHMOVE");
+                        if(this.selected) {
+                            Log.d("DEBUG", "Moving Note!");
+                            int xdelta = (int) event.getX();
+                            int ydelta = (int) event.getY();
+                            if(Math.abs(xdelta - this.lastDragX) / 3 > 1) {
+                                this.changeX(xdelta - this.lastDragX);
+                            }
+                            if(Math.abs(ydelta - this.lastDragY) / 3 > 1) {
+                                this.changeY(ydelta - this.lastDragY);
+                            }
 
-                    //touch_move(x, y);
-                    //invalidate();
-                    break;
+                            this.lastDragX = xdelta;
+                            this.lastDragY = ydelta;
+
+                            Log.d("DEBUG", "New position: " + (int) event.getX() + ", " + (int) event.getY());
+                            invalidate();
+                        }
+                        break;
+
                 case MotionEvent.ACTION_UP:
-                    Log.d("DEBUG", "TOUCHUP");
+                    if(this.selected) {
+                        Log.d("DEBUG", "TOUCHUP");
 
-                    this.paint.setColor(Color.BLUE);
-
-                    //touch_up();
-                    invalidate();
+                        this.endDragX = (int)event.getX();
+                        this.endDragY = (int)event.getY();
+                        this.setPosition(new int[] {endDragX, endDragY});
+                        this.paint.setColor(Color.GRAY);
+                        this.selected = false;
+                        invalidate();
+                    }
                     break;
             }
-            return true;
-        }
-        else {
-            return false;
-        }
-
-
+        return true;
     }
 }
