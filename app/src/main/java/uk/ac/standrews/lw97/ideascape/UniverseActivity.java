@@ -23,29 +23,22 @@ public class UniverseActivity extends AppCompatActivity {
 
         this.notebase = new NoteBase(this, this.user);
         Log.d("DEBUG", "Created notebase");
-        this.notebase.addNote(new Note(this, null, "Luki", new int[] {30, 30}));
-        this.notebase.addNote(new Note(this, null, "Luki", new int[] {500, 500}));
-        this.notebase.addNote(new Note(this, null, "Luki", new int[] {1000, 1000}));
+        this.notebase.addNote(new Note(this, null, "Luki", new int[] {30, 30}, "One"));
+        this.notebase.addNote(new Note(this, null, "Luki", new int[] {500, 500}, "Two"));
+        this.notebase.addNote(new Note(this, null, "Luki", new int[] {1000, 1000}, "Three"));
 
-        FrameLayout fl = new FrameLayout(this);
-        fl.addView(new Background(this, Color.BLACK));
+        NotesGroup notesGroup = new NotesGroup(this);
 
+        notesGroup.addView(new Background(this, Color.BLACK));
         for (String key : this.notebase.getAllNotes().keySet()) {
             for (Note note : this.notebase.getAllNotes().get(key)) {
                 Log.d("DEBUG", "Added note to layout");
-                fl.addView(note);
+                notesGroup.addView(note);
             }
         }
 
-        fl.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                Log.d("DEBUG", "Registered touch");
 
-                return false;
-            }
-        });
 
-        setContentView(fl);
+        setContentView(notesGroup);
     }
 }

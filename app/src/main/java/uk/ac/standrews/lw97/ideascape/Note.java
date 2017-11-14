@@ -33,9 +33,9 @@ public class Note extends View {
     int endDragY;
     boolean selected;
 
-    public Note(Context context, AttributeSet attrs, String user, int[] position) {
+    public Note(Context context, AttributeSet attrs, String user, int[] position, String title) {
         super(context, attrs);
-        this.title = "Title";
+        this.title = title;
         this.content = "Content";
         this.position = position;
         this.tag = "None";
@@ -113,7 +113,7 @@ public class Note extends View {
                 String.valueOf(this.position[1]), String.valueOf(this.status), this.tag};
     }
 
-    private boolean checkPositionOverlap(float x, float y) {
+    boolean checkPositionOverlap(float x, float y) {
         return (x > this.position[0] && x < this.position[0] + this.sideLength && y > this.position[1] && y < this.position[1] + this.sideLength);
     }
 
@@ -130,57 +130,58 @@ public class Note extends View {
         this.hitbox = new Rect(this.position[0], this.position[1], this.position[0] + sideLength, this.position[1] + sideLength);
     }
 
+
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        Log.d("DEBUG", "Registered touch");
+        Log.d("DEBUG", "Registered touch on: " + this.title);
         Log.d("DEBUG", String.valueOf(event.getX()) + ", " + String.valueOf(event.getY()));
+
+        int xEvent = (int)event.getX();
+        int yEvent = (int)event.getY();
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                if(checkPositionOverlap((int)event.getX(), (int)event.getY())) {
+                if(checkPositionOverlap(xEvent, yEvent)) {
                         Log.d("DEBUG", "Note selected!");
                         this.selected = true;
                         this.lastDragX = (int) event.getX();
                         this.lastDragY = (int) event.getY();
-
                         this.paint.setColor(Color.BLUE);
                         invalidate();
                 }
                 break;
 
-                case MotionEvent.ACTION_MOVE:
-                        if(this.selected) {
-                            Log.d("DEBUG", "Moving Note!");
-                            int xdelta = (int) event.getX();
-                            int ydelta = (int) event.getY();
-                            if(Math.abs(xdelta - this.lastDragX) / 3 > 1) {
-                                this.changeX(xdelta - this.lastDragX);
-                            }
-                            if(Math.abs(ydelta - this.lastDragY) / 3 > 1) {
-                                this.changeY(ydelta - this.lastDragY);
-                            }
-
-                            this.lastDragX = xdelta;
-                            this.lastDragY = ydelta;
-
-                            Log.d("DEBUG", "New position: " + (int) event.getX() + ", " + (int) event.getY());
-                            invalidate();
-                        }
-                        break;
-
-                case MotionEvent.ACTION_UP:
-                    if(this.selected) {
-                        Log.d("DEBUG", "TOUCHUP");
-
-                        this.endDragX = (int)event.getX();
-                        this.endDragY = (int)event.getY();
-                        this.setPosition(new int[] {endDragX, endDragY});
-                        this.paint.setColor(Color.GRAY);
-                        this.selected = false;
-                        invalidate();
+            case MotionEvent.ACTION_MOVE:
+                if(this.selected) {
+                    Log.d("DEBUG", "Moving Note!");
+                    int xdelta = (int) event.getX();
+                    int ydelta = (int) event.getY();
+                    if(Math.abs(xdelta - this.lastDragX) / 3 > 1) {
+                        this.changeX(xdelta - this.lastDragX);
                     }
-                    break;
-            }
+                    if(Math.abs(ydelta - this.lastDragY) / 3 > 1) {
+                        this.changeY(ydelta - this.lastDragY);
+                    }
+                    this.lastDragX = xdelta;
+                    this.lastDragY = ydelta;
+
+                    Log.d("DEBUG", "New position: " + (int) event.getX() + ", " + (int) event.getY());
+                    invalidate();
+                }
+                break;
+
+            case MotionEvent.ACTION_UP:
+                if(this.selected) {
+                    Log.d("DEBUG", "TOUCHUP");
+                    this.paint.setColor(Color.GRAY);
+                    this.selected = false;
+                    invalidate();
+                }
+
+                break;
+
+        }
         return true;
     }
 }
