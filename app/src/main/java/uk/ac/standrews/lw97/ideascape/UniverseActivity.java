@@ -1,5 +1,7 @@
 package uk.ac.standrews.lw97.ideascape;
 
+import android.content.res.AssetManager;
+import android.graphics.Typeface;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,9 +11,12 @@ public class UniverseActivity extends AppCompatActivity {
     private NoteBase notebase;
     private String user;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         Log.d("DEBUG", "Created Universe Activity");
         this.user = getIntent().getStringExtra("user");
         Log.d("DEBUG", "Got intent");
