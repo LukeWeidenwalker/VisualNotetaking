@@ -140,8 +140,8 @@ public class Note extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        canvas.drawRoundRect(this.hitbox, 5, 5, this.paintRect);
-        canvas.drawText(this.title, this.midX, this.midY, this.paintText);
+        canvas.drawRoundRect(this.hitbox, this.sideLength/6, this.sideLength/6, this.paintRect);
+        canvas.drawText(this.title, this.hitbox.centerX(), this.hitbox.centerY(), this.paintText);
     }
 
     @Override
