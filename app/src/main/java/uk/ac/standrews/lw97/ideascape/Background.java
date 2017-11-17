@@ -1,24 +1,30 @@
 package uk.ac.standrews.lw97.ideascape;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.view.View;
+import android.support.v7.widget.AppCompatImageView;
 
 
-public class Background extends View {
+public class Background extends AppCompatImageView {
 
-    private int background;
     private Bitmap backgroundImage;
 
-    Background(Context context, int background) {
+
+    Background(Context context, int backgroundColor) {
         super(context);
-        this.background = background;
+        backgroundImage = Bitmap.createBitmap(UniverseActivity.getScreenWidth(), UniverseActivity.getScreenHeight(), Bitmap.Config.ARGB_8888);
+        backgroundImage.eraseColor(backgroundColor);
+        this.setImageBitmap(this.backgroundImage);
     }
 
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-        canvas.drawColor(background);
+    Background(Context context) {
+        super(context);
+
+        Bitmap b = BitmapFactory.decodeResource(getResources(), R.drawable.galaxy_bg_1);
+        this.backgroundImage = Bitmap.createScaledBitmap(b, UniverseActivity.getScreenWidth()+128, UniverseActivity.getScreenHeight(), false);
+        this.setImageBitmap(this.backgroundImage);
     }
 }

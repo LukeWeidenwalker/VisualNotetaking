@@ -171,7 +171,6 @@ public class Note extends View {
                     this.selected = true;
                     this.lastDragX = (int) event.getX();
                     this.lastDragY = (int) event.getY();
-                    //invalidate();
                 }
                 break;
 
@@ -186,7 +185,6 @@ public class Note extends View {
                     this.lastDragY = ydelta;
 
                     //Log.d("DEBUG", "New position: " + (int) event.getX() + ", " + (int) event.getY());
-                    //invalidate();
                 }
                 break;
 
@@ -195,7 +193,6 @@ public class Note extends View {
                     //Log.d("DEBUG", "TOUCHUP");
                     this.paintRect.setColor(this.darkPrimaryColor);
                     this.selected = false;
-                    //invalidate();
                 }
 
                 break;
