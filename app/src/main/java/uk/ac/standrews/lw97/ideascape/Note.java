@@ -2,16 +2,16 @@ package uk.ac.standrews.lw97.ideascape;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.LinearGradient;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
 
 import java.util.Calendar;
 
@@ -39,6 +39,11 @@ public class Note extends View {
     int strokeWidth;
     Context context;
 
+    // Keyboard
+    String mText;
+    private InputMethodManager imm;
+    String inputDecider;
+
     int primaryColor = getResources().getColor(R.color.colorPrimary, null);
     int darkPrimaryColor = getResources().getColor(R.color.colorPrimaryDark, null);
     int accentColor = getResources().getColor(R.color.colorAccent, null);
@@ -47,6 +52,7 @@ public class Note extends View {
     int lastDragX = 0;
     int lastDragY = 0;
     boolean selected;
+    boolean keyboardExpanded = false;
     long startClickTime;
     static final int MAX_CLICK_DURATION = 200;
 
@@ -63,6 +69,7 @@ public class Note extends View {
         this.user = user;
         this.selected = false;
         setupDrawing();
+        setupKeyboard();
     }
 
     public Note(Context context, AttributeSet attrs, String[] valuesLine) {
@@ -78,6 +85,35 @@ public class Note extends View {
         this.tag = valuesLine[7];
         this.selected = false;
         setupDrawing();
+        setupKeyboard();
+
+    }
+
+
+    public void setupKeyboard() {
+        // As in https://stackoverflow.com/questions/27717531/get-input-text-with-customview-without-edittext-android
+        setFocusable(true);
+        setFocusableInTouchMode(true);
+        mText = "";
+        setOnKeyListener(new OnKeyListener() {
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                    if((keyCode >= KeyEvent.KEYCODE_A) && (keyCode <= KeyEvent.KEYCODE_Z)) {
+                        mText = mText + (char) event.getUnicodeChar();
+                        if(inputDecider.equals("title")) {
+                            setTitle(mText);
+                        }
+                        else {
+                            setContent(mText);
+                        }
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+        this.imm = (InputMethodManager) getContext()
+                .getSystemService(Context.INPUT_METHOD_SERVICE);
     }
 
     public void setupDrawing() {
@@ -169,7 +205,6 @@ public class Note extends View {
         this.hitboxStroke = new RectF(this.position[0] - this.strokeWidth, this.position[1] - this.strokeWidth,
                 this.position[0] + sideLength + this.strokeWidth, this.position[1] + sideLength + this.strokeWidth);
         this.hitbox = new RectF(this.position[0], this.position[1], this.position[0] + sideLength, this.position[1] + sideLength);
-
     }
 
 
@@ -183,6 +218,10 @@ public class Note extends View {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                if(keyboardExpanded) {
+                    this.imm.hideSoftInputFromWindow(this.getWindowToken(), 0);
+                }
+
                 if (checkPositionOverlap(xEvent, yEvent)) {
                     //Log.d("DEBUG", "Note selected!");
                     startClickTime = Calendar.getInstance().getTimeInMillis();
@@ -190,10 +229,10 @@ public class Note extends View {
                     this.selected = true;
                     this.lastDragX = (int) event.getX();
                     this.lastDragY = (int) event.getY();
+
+                    // Add a glowing outline to the note when selected
                     this.paintStroke.setColor(this.accentColor);
                     return true;
-
-                    // Add a glowing outline to the note
                 }
                 break;
 
@@ -215,7 +254,17 @@ public class Note extends View {
             case MotionEvent.ACTION_UP:
                 long clickDuration = Calendar.getInstance().getTimeInMillis() - this.startClickTime;
                 if (clickDuration < MAX_CLICK_DURATION) {
-                    this.paintRect.setColor(this.accentColor);
+                    //this.paintRect.setColor(this.accentColor);
+                    // Show keyboard
+                    if(event.getY() > (hitbox.top + (this.sideLength/3))){
+                        this.inputDecider = "title";
+                    }
+                    else {
+                        this.inputDecider = "content";
+                    }
+
+                    this.imm.showSoftInput(this, InputMethodManager.SHOW_FORCED);
+                    keyboardExpanded = true;
                     invalidate();
                     return true;
                 }
@@ -229,7 +278,7 @@ public class Note extends View {
 
                 break;
 
-                }
+        }
         return false;
     }
 }

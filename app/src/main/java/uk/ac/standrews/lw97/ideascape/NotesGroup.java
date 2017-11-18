@@ -26,4 +26,11 @@ public class NotesGroup extends FrameLayout {
         }
         return false;
     }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        // Touchevents that are not treated by a note arrive here.
+        Log.d("DEBUG", "TouchEvent bubbled up!");
+        return true;
+    }
 }
