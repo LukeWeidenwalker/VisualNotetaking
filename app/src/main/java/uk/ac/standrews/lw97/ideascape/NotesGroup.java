@@ -24,6 +24,6 @@ public class NotesGroup extends FrameLayout {
                 break;
             }
         }
-        return true;
+        return false;
     }
 }

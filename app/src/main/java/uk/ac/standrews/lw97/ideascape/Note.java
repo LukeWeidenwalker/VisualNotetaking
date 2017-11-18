@@ -2,7 +2,6 @@ package uk.ac.standrews.lw97.ideascape;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.CornerPathEffect;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Rect;
@@ -13,6 +12,8 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+
+import java.util.Calendar;
 
 
 public class Note extends View {
@@ -46,6 +47,9 @@ public class Note extends View {
     int lastDragX = 0;
     int lastDragY = 0;
     boolean selected;
+    long startClickTime;
+    static final int MAX_CLICK_DURATION = 200;
+
 
     public Note(Context context, AttributeSet attrs, String user, int[] position, String title) {
         super(context, attrs);
@@ -91,7 +95,7 @@ public class Note extends View {
         this.paintRect = new Paint();
         this.paintRect.setColor(this.darkPrimaryColor);
         this.paintStroke = new Paint();
-        this.paintStroke.setColor(this.accentColor);
+        this.paintStroke.setColor(this.darkPrimaryColor);
         //this.paintStroke.setShader(new LinearGradient(0, 0, 0, getHeight(), this.darkPrimaryColor, this.accentColor, Shader.TileMode.MIRROR));
 
         this.paintText = new Paint();
@@ -143,7 +147,7 @@ public class Note extends View {
 
     public String[] saveNote() {
         // Return a full string array containing all attributes of this note
-        return new String[] {this.user, this.timestamp, this.content, this.title, String.valueOf(this.position[0]),
+        return new String[]{this.user, this.timestamp, this.content, this.title, String.valueOf(this.position[0]),
                 String.valueOf(this.position[1]), String.valueOf(this.status), this.tag};
     }
 
@@ -154,9 +158,9 @@ public class Note extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        canvas.drawRoundRect(this.hitboxStroke, this.sideLength/6, this.sideLength/6, this.paintStroke);
-        canvas.drawRoundRect(this.hitbox, this.sideLength/6, this.sideLength/6, this.paintRect);
-        canvas.drawText(this.title, this.hitbox.left + (this.sideLength/4), this.hitbox.top + (this.sideLength/3), this.paintText);
+        canvas.drawRoundRect(this.hitboxStroke, this.sideLength / 6, this.sideLength / 6, this.paintStroke);
+        canvas.drawRoundRect(this.hitbox, this.sideLength / 6, this.sideLength / 6, this.paintRect);
+        canvas.drawText(this.title, this.hitbox.left + (this.sideLength / 4), this.hitbox.top + (this.sideLength / 3), this.paintText);
     }
 
     @Override
@@ -174,26 +178,27 @@ public class Note extends View {
         Log.d("DEBUG", "Registered touch on: " + this.title);
         Log.d("DEBUG", String.valueOf(event.getX()) + ", " + String.valueOf(event.getY()));
 
-        int xEvent = (int)event.getX();
-        int yEvent = (int)event.getY();
+        int xEvent = (int) event.getX();
+        int yEvent = (int) event.getY();
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                if(checkPositionOverlap(xEvent, yEvent)) {
+                if (checkPositionOverlap(xEvent, yEvent)) {
                     //Log.d("DEBUG", "Note selected!");
+                    startClickTime = Calendar.getInstance().getTimeInMillis();
+
                     this.selected = true;
                     this.lastDragX = (int) event.getX();
                     this.lastDragY = (int) event.getY();
+                    this.paintStroke.setColor(this.accentColor);
+                    return true;
 
                     // Add a glowing outline to the note
-
-
-                    return true;
                 }
                 break;
 
             case MotionEvent.ACTION_MOVE:
-                if(this.selected) {
+                if (this.selected) {
                     //Log.d("DEBUG", "Moving Note!");
                     int xdelta = (int) event.getX();
                     int ydelta = (int) event.getY();
@@ -203,22 +208,28 @@ public class Note extends View {
                     this.lastDragY = ydelta;
                     invalidate();
                     return true;
-
                     //Log.d("DEBUG", "New position: " + (int) event.getX() + ", " + (int) event.getY());
                 }
                 break;
 
             case MotionEvent.ACTION_UP:
-                if(this.selected) {
+                long clickDuration = Calendar.getInstance().getTimeInMillis() - this.startClickTime;
+                if (clickDuration < MAX_CLICK_DURATION) {
+                    this.paintRect.setColor(this.accentColor);
+                    invalidate();
+                    return true;
+                }
+                if (this.selected) {
                     //Log.d("DEBUG", "TOUCHUP");
-                    this.paintRect.setColor(this.darkPrimaryColor);
+                    this.paintStroke.setColor(this.darkPrimaryColor);
                     this.selected = false;
                     invalidate();
                     return true;
                 }
 
                 break;
-        }
+
+                }
         return false;
     }
 }
