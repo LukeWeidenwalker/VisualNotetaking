@@ -24,6 +24,7 @@ public class Note extends View {
     int status;
     String timestamp;
     String user;
+    NotesGroup parentNoteGroup;
 
     int[] position;
     int midX;
@@ -42,9 +43,9 @@ public class Note extends View {
 
     // Keyboard
     String mText;
-    private InputMethodManager imm;
     String inputDecider = "";
     OnKeyListener keyListener;
+    InputMethodManager imm;
 
     int primaryColor = getResources().getColor(R.color.colorPrimary, null);
     int darkPrimaryColor = getResources().getColor(R.color.colorPrimaryDark, null);
@@ -58,7 +59,9 @@ public class Note extends View {
     long startClickTime;
     static final int MAX_CLICK_DURATION = 200;
 
-
+    // -------------------
+    // Constructors
+    // -------------------
     public Note(Context context, AttributeSet attrs, String user, int[] position, String title) {
         super(context, attrs);
         this.context = context;
@@ -72,8 +75,7 @@ public class Note extends View {
         this.selected = false;
         setupDrawing();
         setupKeyboard();
-        this.imm = (InputMethodManager) getContext()
-                .getSystemService(Context.INPUT_METHOD_SERVICE);
+
     }
 
     public Note(Context context, AttributeSet attrs, String[] valuesLine) {
@@ -88,17 +90,21 @@ public class Note extends View {
         this.status = Integer.parseInt(valuesLine[6]);
         this.tag = valuesLine[7];
         this.selected = false;
+
         setupDrawing();
         setupKeyboard();
-        this.imm = (InputMethodManager) getContext()
-                .getSystemService(Context.INPUT_METHOD_SERVICE);
     }
 
 
+    // -------------------
+    // Keyboard
+    // -------------------
     public void setupKeyboard() {
         // As in https://stackoverflow.com/questions/27717531/get-input-text-with-customview-without-edittext-android
         setFocusable(true);
         setFocusableInTouchMode(true);
+        this.imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+
         if(inputDecider.equals("title")) {
             mText = title;
         }
@@ -108,7 +114,7 @@ public class Note extends View {
         keyListener = new OnKeyListener() {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (event.getAction() == KeyEvent.ACTION_DOWN) {
-                    if((keyCode >= KeyEvent.KEYCODE_A) && (keyCode <= KeyEvent.KEYCODE_ENTER)) {
+                    if ((keyCode >= KeyEvent.KEYCODE_A) && (keyCode <= KeyEvent.KEYCODE_ENTER)) {
                         mText = mText + (char) event.getUnicodeChar();
                         if(inputDecider.equals("title")) {
                             setTitle(mText);
@@ -119,7 +125,7 @@ public class Note extends View {
                         return true;
                     }
 
-                    else if(keyCode == KeyEvent.KEYCODE_DEL) {
+                    else if (keyCode == KeyEvent.KEYCODE_DEL) {
                         if(mText.length() > 0) {
                             mText = mText.substring(0, mText.length() - 1);
                         }
@@ -135,6 +141,11 @@ public class Note extends View {
             }
         };
         setOnKeyListener(keyListener);
+
+    }
+
+    static void expandKeyboard() {
+
     }
 
     public void setupDrawing() {
@@ -196,6 +207,10 @@ public class Note extends View {
         invalidate();
     }
 
+    public void setParentNoteGroup(NotesGroup parentNoteGroup) {
+        this.parentNoteGroup = parentNoteGroup;
+    }
+
     public String[] saveNote() {
         // Return a full string array containing all attributes of this note
         return new String[]{this.user, this.timestamp, this.content, this.title, String.valueOf(this.position[0]),
@@ -205,6 +220,9 @@ public class Note extends View {
     boolean checkPositionOverlap(float x, float y) {
         return (x > this.position[0] && x < this.position[0] + this.sideLength && y > this.position[1] && y < this.position[1] + this.sideLength);
     }
+
+
+
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -236,7 +254,10 @@ public class Note extends View {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 if(keyboardExpanded) {
+                    this.requestFocus();
+                    this.requestFocusFromTouch();
                     this.imm.hideSoftInputFromWindow(this.getWindowToken(), 0);
+                    //this.parentNoteGroup.toggleKeyboard(this, true);
                     this.keyboardExpanded = false;
                 }
 
@@ -251,6 +272,9 @@ public class Note extends View {
                     // Add a glowing outline to the note when selected
                     this.paintStroke.setColor(this.accentColor);
                     return true;
+                }
+                else {
+                    this.selected = false;
                 }
                 break;
 
@@ -287,11 +311,15 @@ public class Note extends View {
 
                     Log.d("DEBUG", "Trying to open keyboard on: " + this.title);
                     setupKeyboard();
+                    this.requestFocus();
+                    this.requestFocusFromTouch();
                     this.imm.showSoftInput(this, InputMethodManager.SHOW_FORCED);
+
                     this.keyboardExpanded = true;
                     invalidate();
                     return true;
                 }
+
                 if (this.selected) {
                     //Log.d("DEBUG", "TOUCHUP");
                     this.paintStroke.setColor(this.darkPrimaryColor);

@@ -3,15 +3,50 @@ package uk.ac.standrews.lw97.ideascape;
 import android.content.Context;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.FrameLayout;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
 
 
 public class NotesGroup extends FrameLayout {
-    NotesGroup(Context context) {
+
+    private String tagGroup;
+
+
+    NotesGroup(Context context, NoteBase noteBase, String tagGroup) {
         super(context);
+        this.tagGroup = tagGroup;
         this.addView(new Background(context));
+        this.addViews(noteBase);
     }
 
+    void addViews(NoteBase noteBase) {
+        HashMap<String, ArrayList<Note>> tagDictionary = noteBase.getAllNotes();
+        for(Note note : tagDictionary.get(tagGroup)) {
+            note.setParentNoteGroup(this);
+            this.addView(note);
+        }
+    }
+
+
+    public void toggleKeyboard(Note note, boolean isOpen) {
+        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        try {
+            if(isOpen) {
+                imm.hideSoftInputFromWindow(this.getWindowToken(), 0);
+            }
+            else {
+                imm.showSoftInput(note, InputMethodManager.SHOW_FORCED);
+            }
+        }
+        catch(ArrayIndexOutOfBoundsException a) {
+            Log.d("DEBUG", "Caught AIOUB Exception: Keyboard does not exist");
+        }
+    }
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
@@ -30,6 +65,8 @@ public class NotesGroup extends FrameLayout {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         // Touchevents that are not treated by a note arrive here.
+
+
         Log.d("DEBUG", "TouchEvent bubbled up!");
         return true;
     }

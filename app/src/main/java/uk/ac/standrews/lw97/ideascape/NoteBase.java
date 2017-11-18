@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Observable;
 
 
-public class NoteBase{
+public class NoteBase {
     // Datastructure to hold all Notes a user has made on a canvas
     private String user;
     // Organise notes into tag groups to allow for more efficient retrieval.
@@ -30,7 +30,7 @@ public class NoteBase{
 
     // Constructor
 
-    public NoteBase(Context context, String user) {
+    public NoteBase(Context context, AttributeSet attrs, String user) {
         this.context = context;
         this.user = user;
         this.tagDictionary = new HashMap<>();

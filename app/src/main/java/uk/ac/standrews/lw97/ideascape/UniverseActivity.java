@@ -22,22 +22,14 @@ public class UniverseActivity extends AppCompatActivity {
         this.user = getIntent().getStringExtra("user");
         Log.d("DEBUG", "Got intent");
 
-        this.notebase = new NoteBase(this, this.user);
+        this.notebase = new NoteBase(this, null, this.user);
         Log.d("DEBUG", "Created notebase");
+
         this.notebase.addNote(new Note(this, null, "Luki", new int[] {30, 30}, "One"));
         this.notebase.addNote(new Note(this, null, "Luki", new int[] {500, 500}, "Two"));
         this.notebase.addNote(new Note(this, null, "Luki", new int[] {1000, 1000}, "Three"));
 
-        NotesGroup notesGroup = new NotesGroup(this);
-
-        for (String key : this.notebase.getAllNotes().keySet()) {
-            for (Note note : this.notebase.getAllNotes().get(key)) {
-                Log.d("DEBUG", "Added note to layout");
-                notesGroup.addView(note);
-            }
-        }
-
-
+        NotesGroup notesGroup = new NotesGroup(this, this.notebase, "None");
 
         setContentView(notesGroup);
     }
