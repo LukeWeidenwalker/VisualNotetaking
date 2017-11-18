@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.text.method.KeyListener;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -42,7 +43,8 @@ public class Note extends View {
     // Keyboard
     String mText;
     private InputMethodManager imm;
-    String inputDecider;
+    String inputDecider = "";
+    OnKeyListener keyListener;
 
     int primaryColor = getResources().getColor(R.color.colorPrimary, null);
     int darkPrimaryColor = getResources().getColor(R.color.colorPrimaryDark, null);
@@ -70,6 +72,8 @@ public class Note extends View {
         this.selected = false;
         setupDrawing();
         setupKeyboard();
+        this.imm = (InputMethodManager) getContext()
+                .getSystemService(Context.INPUT_METHOD_SERVICE);
     }
 
     public Note(Context context, AttributeSet attrs, String[] valuesLine) {
@@ -86,7 +90,8 @@ public class Note extends View {
         this.selected = false;
         setupDrawing();
         setupKeyboard();
-
+        this.imm = (InputMethodManager) getContext()
+                .getSystemService(Context.INPUT_METHOD_SERVICE);
     }
 
 
@@ -94,26 +99,42 @@ public class Note extends View {
         // As in https://stackoverflow.com/questions/27717531/get-input-text-with-customview-without-edittext-android
         setFocusable(true);
         setFocusableInTouchMode(true);
-        mText = "";
-        setOnKeyListener(new OnKeyListener() {
+        if(inputDecider.equals("title")) {
+            mText = title;
+        }
+        else if (inputDecider.equals("content")){
+            mText = content;
+        }
+        keyListener = new OnKeyListener() {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (event.getAction() == KeyEvent.ACTION_DOWN) {
-                    if((keyCode >= KeyEvent.KEYCODE_A) && (keyCode <= KeyEvent.KEYCODE_Z)) {
+                    if((keyCode >= KeyEvent.KEYCODE_A) && (keyCode <= KeyEvent.KEYCODE_ENTER)) {
                         mText = mText + (char) event.getUnicodeChar();
                         if(inputDecider.equals("title")) {
                             setTitle(mText);
                         }
-                        else {
+                        else if (inputDecider.equals("content")) {
                             setContent(mText);
                         }
                         return true;
                     }
+
+                    else if(keyCode == KeyEvent.KEYCODE_DEL) {
+                        if(mText.length() > 0) {
+                            mText = mText.substring(0, mText.length() - 1);
+                        }
+                        if(inputDecider.equals("title")) {
+                            setTitle(mText);
+                        }
+                        else if (inputDecider.equals("content")) {
+                            setContent(mText);
+                        }
+                    }
                 }
                 return false;
             }
-        });
-        this.imm = (InputMethodManager) getContext()
-                .getSystemService(Context.INPUT_METHOD_SERVICE);
+        };
+        setOnKeyListener(keyListener);
     }
 
     public void setupDrawing() {
@@ -145,14 +166,8 @@ public class Note extends View {
         return this.tag;
     }
 
-
     public void setContent(String content) {
         this.content = content;
-        invalidate();
-    }
-
-    public void addContent(String content) {
-        this.content += content;
         invalidate();
     }
 
@@ -197,6 +212,8 @@ public class Note extends View {
         canvas.drawRoundRect(this.hitboxStroke, this.sideLength / 6, this.sideLength / 6, this.paintStroke);
         canvas.drawRoundRect(this.hitbox, this.sideLength / 6, this.sideLength / 6, this.paintRect);
         canvas.drawText(this.title, this.hitbox.left + (this.sideLength / 4), this.hitbox.top + (this.sideLength / 3), this.paintText);
+        canvas.drawText(this.content, this.hitbox.left + (this.sideLength / 4), this.hitbox.top + (5 * this.sideLength / 6), this.paintText);
+
     }
 
     @Override
@@ -220,6 +237,7 @@ public class Note extends View {
             case MotionEvent.ACTION_DOWN:
                 if(keyboardExpanded) {
                     this.imm.hideSoftInputFromWindow(this.getWindowToken(), 0);
+                    this.keyboardExpanded = false;
                 }
 
                 if (checkPositionOverlap(xEvent, yEvent)) {
@@ -256,15 +274,21 @@ public class Note extends View {
                 if (clickDuration < MAX_CLICK_DURATION) {
                     //this.paintRect.setColor(this.accentColor);
                     // Show keyboard
-                    if(event.getY() > (hitbox.top + (this.sideLength/3))){
+                    Log.d("DEBUG", "Y value: " + event.getY());
+                    if(event.getY() < (hitbox.top + (this.sideLength/3))){
+                        Log.d("DEBUG", "Editing title.");
                         this.inputDecider = "title";
                     }
                     else {
+                        Log.d("DEBUG", "Editing content.");
+
                         this.inputDecider = "content";
                     }
 
+                    Log.d("DEBUG", "Trying to open keyboard on: " + this.title);
+                    setupKeyboard();
                     this.imm.showSoftInput(this, InputMethodManager.SHOW_FORCED);
-                    keyboardExpanded = true;
+                    this.keyboardExpanded = true;
                     invalidate();
                     return true;
                 }
