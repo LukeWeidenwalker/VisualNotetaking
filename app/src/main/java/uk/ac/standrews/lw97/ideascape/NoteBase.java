@@ -53,6 +53,17 @@ public class NoteBase{
         // TODO: Improve this so that some characters are escaped: https://stackoverflow.com/questions/769621/dealing-with-commas-in-a-csv-file
         BufferedReader reader;
         try {
+            Log.d("DEBUG", "Trying to access files");
+            Log.d("DEBUG", this.context.getFilesDir().getAbsolutePath());
+            String path = this.context.getFilesDir().getAbsolutePath();
+            Log.d("Files", "Path: " + path);
+            File directory = new File(path);
+            File[] files = directory.listFiles();
+            Log.d("Files", "Size: "+ files.length);
+            for (int i = 0; i < files.length; i++)
+            {
+                Log.d("Files", "FileName:" + files[i].getName());
+            }
             File file = new File(this.context.getFilesDir(), this.user + "-notes.csv");
             if (file.exists()) {
                 reader = new BufferedReader(new FileReader(file));
@@ -78,7 +89,7 @@ public class NoteBase{
         // Format (8 entries): USER;TIMESTAMP;CONTENT;TITLE;POSITION_X;POSITION_Y;STATUS;TAG
         StringBuilder sb = new StringBuilder();
         try {
-            File file = new File(this.context.getFilesDir() + this.user + "-notes.csv");
+            File file = new File(this.context.getFilesDir().getAbsolutePath() + this.user + "-notes.csv");
             if (!(file.exists())) {
                 boolean fileCreated = file.createNewFile();
                 if (fileCreated) {
