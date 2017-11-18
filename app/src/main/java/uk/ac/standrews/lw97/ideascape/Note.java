@@ -5,15 +5,12 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Typeface;
-import android.text.method.KeyListener;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Toast;
-
 import java.util.Calendar;
 
 
@@ -25,6 +22,7 @@ public class Note extends View {
     String timestamp;
     String user;
     NotesGroup parentNoteGroup;
+    static String newline = System.getProperty("line.separator");
 
     int[] position;
     int midX;
@@ -50,6 +48,7 @@ public class Note extends View {
     int primaryColor = getResources().getColor(R.color.colorPrimary, null);
     int darkPrimaryColor = getResources().getColor(R.color.colorPrimaryDark, null);
     int accentColor = getResources().getColor(R.color.colorAccent, null);
+    int invisibleColor = getResources().getColor(R.color.invisible, null);
 
     // Motion variables
     int lastDragX = 0;
@@ -99,55 +98,69 @@ public class Note extends View {
     // -------------------
     // Keyboard
     // -------------------
-    public void setupKeyboard() {
-        // As in https://stackoverflow.com/questions/27717531/get-input-text-with-customview-without-edittext-android
-        setFocusable(true);
-        setFocusableInTouchMode(true);
-        this.imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+    public boolean inputDeciderSetter(String mText) {
+        if(inputDecider.equals("title")) {
+            setTitle(mText);
+        }
+        else if (inputDecider.equals("content")) {
+            setContent(mText);
+        }
+        return true;
+    }
 
+    public boolean initMText() {
         if(inputDecider.equals("title")) {
             mText = title;
         }
         else if (inputDecider.equals("content")){
             mText = content;
         }
+        return true;
+    }
+
+    public void interpretKeycode(int keyCode, KeyEvent event) {
+        // Normal Alphabet + chars
+        if (((keyCode >= KeyEvent.KEYCODE_A) && (keyCode <= KeyEvent.KEYCODE_PERIOD)) || (keyCode == KeyEvent.KEYCODE_SPACE)
+                || ((keyCode >= KeyEvent.KEYCODE_MINUS) && (keyCode <= KeyEvent.KEYCODE_AT))) {
+            mText = mText + (char) event.getUnicodeChar();
+        }
+
+        // Delete Button
+        else if (keyCode == KeyEvent.KEYCODE_DEL) {
+            if(mText.length() > 0) {
+                mText = mText.substring(0, mText.length() - 1);
+            }
+        }
+
+        // Enter Button
+        else if (keyCode == KeyEvent.KEYCODE_ENTER) {
+            mText = mText + newline;
+        }
+    }
+
+    public void setupKeyboard() {
+        // As in https://stackoverflow.com/questions/27717531/get-input-text-with-customview-without-edittext-android
+        setFocusable(true);
+        setFocusableInTouchMode(true);
+        this.imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        initMText();
+
         keyListener = new OnKeyListener() {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (event.getAction() == KeyEvent.ACTION_DOWN) {
-                    if ((keyCode >= KeyEvent.KEYCODE_A) && (keyCode <= KeyEvent.KEYCODE_ENTER)) {
-                        mText = mText + (char) event.getUnicodeChar();
-                        if(inputDecider.equals("title")) {
-                            setTitle(mText);
-                        }
-                        else if (inputDecider.equals("content")) {
-                            setContent(mText);
-                        }
-                        return true;
-                    }
-
-                    else if (keyCode == KeyEvent.KEYCODE_DEL) {
-                        if(mText.length() > 0) {
-                            mText = mText.substring(0, mText.length() - 1);
-                        }
-                        if(inputDecider.equals("title")) {
-                            setTitle(mText);
-                        }
-                        else if (inputDecider.equals("content")) {
-                            setContent(mText);
-                        }
-                    }
+                    interpretKeycode(keyCode, event);
+                    return inputDeciderSetter(mText);
                 }
                 return false;
             }
         };
         setOnKeyListener(keyListener);
-
     }
 
-    static void expandKeyboard() {
-
-    }
-
+    // -------------------
+    // Drawing
+    // -------------------
     public void setupDrawing() {
         // Setup how it will be drawn
         Typeface bold = Typeface.createFromAsset(this.context.getAssets(), "fonts/AppleSDGothicNeo.ttc");
@@ -170,8 +183,143 @@ public class Note extends View {
         this.paintText.setColor(this.primaryColor);
         this.paintText.setTypeface(bold);
         this.paintText.setTextSize(72);
+        this.paintText.setTextAlign(Paint.Align.CENTER);
     }
 
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        if(selected) {
+            this.paintStroke.setColor(this.accentColor);
+        }
+        else {
+            this.paintStroke.setColor(this.invisibleColor);
+        }
+        canvas.drawRoundRect(this.hitboxStroke, this.sideLength / 6, this.sideLength / 6, this.paintStroke);
+        canvas.drawRoundRect(this.hitbox, this.sideLength / 6, this.sideLength / 6, this.paintRect);
+        canvas.drawText(this.title, this.hitbox.left, this.hitbox.top + (this.sideLength / 3), this.paintText);
+        canvas.drawText(this.content, this.hitbox.left, this.hitbox.top + (5 * this.sideLength / 6), this.paintText);
+    }
+
+
+    // -------------------
+    // Misc
+    // -------------------
+
+    boolean checkPositionOverlap(float x, float y) {
+        return (x > this.position[0] && x < this.position[0] + this.sideLength && y > this.position[1] && y < this.position[1] + this.sideLength);
+    }
+
+    public void expandKeyboard() {
+        this.requestFocus();
+        this.requestFocusFromTouch();
+        this.imm.showSoftInput(this, InputMethodManager.SHOW_FORCED);
+        this.keyboardExpanded = true;
+    }
+
+    public void collapseKeyboard() {
+        this.requestFocus();
+        this.requestFocusFromTouch();
+        this.imm.hideSoftInputFromWindow(this.getWindowToken(), 0);
+        this.keyboardExpanded = false;
+    }
+
+    @Override
+    public void invalidate() {
+        super.invalidate();
+        this.hitboxStroke = new RectF(this.position[0] - this.strokeWidth, this.position[1] - this.strokeWidth,
+                this.position[0] + sideLength + this.strokeWidth, this.position[1] + sideLength + this.strokeWidth);
+        this.hitbox = new RectF(this.position[0], this.position[1], this.position[0] + sideLength, this.position[1] + sideLength);
+    }
+
+    // -------------------
+    // Handling Touch Events
+    // -------------------
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        Log.d("DEBUG", "Registered touch on: " + this.title);
+        Log.d("DEBUG", String.valueOf(event.getX()) + ", " + String.valueOf(event.getY()));
+
+        int xEvent = (int) event.getX();
+        int yEvent = (int) event.getY();
+
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                // Collapse Keyboard if necessary.
+                if(keyboardExpanded) {
+                    collapseKeyboard();
+                }
+
+                if (checkPositionOverlap(xEvent, yEvent)) {
+                    startClickTime = Calendar.getInstance().getTimeInMillis();
+
+                    this.selected = true;
+                    this.lastDragX = (int) event.getX();
+                    this.lastDragY = (int) event.getY();
+
+                    // Add a glowing outline to the note when selected
+                    return true;
+                }
+                else {
+                    this.selected = false;
+                }
+                break;
+
+
+            case MotionEvent.ACTION_MOVE:
+                if (this.selected) {
+                    //Log.d("DEBUG", "Moving Note!");
+                    int xdelta = (int) event.getX();
+                    int ydelta = (int) event.getY();
+                    this.changeX(xdelta - this.lastDragX);
+                    this.changeY(ydelta - this.lastDragY);
+                    this.lastDragX = xdelta;
+                    this.lastDragY = ydelta;
+                    invalidate();
+                    return true;
+                }
+                break;
+
+
+            case MotionEvent.ACTION_UP:
+                long clickDuration = Calendar.getInstance().getTimeInMillis() - this.startClickTime;
+                if (clickDuration < MAX_CLICK_DURATION) {
+                    Log.d("DEBUG", "Y value: " + event.getY());
+                    if(event.getY() < (hitbox.top + (this.sideLength/3))){
+                        Log.d("DEBUG", "Editing title.");
+                        this.inputDecider = "title";
+                    }
+                    else {
+                        Log.d("DEBUG", "Editing content.");
+
+                        this.inputDecider = "content";
+                    }
+
+                    Log.d("DEBUG", "Trying to open keyboard on: " + this.title);
+
+                    initMText();
+                    expandKeyboard();
+                    invalidate();
+                    return true;
+                }
+
+                if (this.selected) {
+                    this.paintStroke.setColor(this.darkPrimaryColor);
+                    this.selected = false;
+                    invalidate();
+                    return true;
+                }
+
+                break;
+        }
+        return false;
+    }
+
+
+
+    // -------------------
+    // Setters and getters
+    // -------------------
 
     public String getTag() {
         return this.tag;
@@ -215,122 +363,5 @@ public class Note extends View {
         // Return a full string array containing all attributes of this note
         return new String[]{this.user, this.timestamp, this.content, this.title, String.valueOf(this.position[0]),
                 String.valueOf(this.position[1]), String.valueOf(this.status), this.tag};
-    }
-
-    boolean checkPositionOverlap(float x, float y) {
-        return (x > this.position[0] && x < this.position[0] + this.sideLength && y > this.position[1] && y < this.position[1] + this.sideLength);
-    }
-
-
-
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-        canvas.drawRoundRect(this.hitboxStroke, this.sideLength / 6, this.sideLength / 6, this.paintStroke);
-        canvas.drawRoundRect(this.hitbox, this.sideLength / 6, this.sideLength / 6, this.paintRect);
-        canvas.drawText(this.title, this.hitbox.left + (this.sideLength / 4), this.hitbox.top + (this.sideLength / 3), this.paintText);
-        canvas.drawText(this.content, this.hitbox.left + (this.sideLength / 4), this.hitbox.top + (5 * this.sideLength / 6), this.paintText);
-
-    }
-
-    @Override
-    public void invalidate() {
-        super.invalidate();
-        this.hitboxStroke = new RectF(this.position[0] - this.strokeWidth, this.position[1] - this.strokeWidth,
-                this.position[0] + sideLength + this.strokeWidth, this.position[1] + sideLength + this.strokeWidth);
-        this.hitbox = new RectF(this.position[0], this.position[1], this.position[0] + sideLength, this.position[1] + sideLength);
-    }
-
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        Log.d("DEBUG", "Registered touch on: " + this.title);
-        Log.d("DEBUG", String.valueOf(event.getX()) + ", " + String.valueOf(event.getY()));
-
-        int xEvent = (int) event.getX();
-        int yEvent = (int) event.getY();
-
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                if(keyboardExpanded) {
-                    this.requestFocus();
-                    this.requestFocusFromTouch();
-                    this.imm.hideSoftInputFromWindow(this.getWindowToken(), 0);
-                    //this.parentNoteGroup.toggleKeyboard(this, true);
-                    this.keyboardExpanded = false;
-                }
-
-                if (checkPositionOverlap(xEvent, yEvent)) {
-                    //Log.d("DEBUG", "Note selected!");
-                    startClickTime = Calendar.getInstance().getTimeInMillis();
-
-                    this.selected = true;
-                    this.lastDragX = (int) event.getX();
-                    this.lastDragY = (int) event.getY();
-
-                    // Add a glowing outline to the note when selected
-                    this.paintStroke.setColor(this.accentColor);
-                    return true;
-                }
-                else {
-                    this.selected = false;
-                }
-                break;
-
-            case MotionEvent.ACTION_MOVE:
-                if (this.selected) {
-                    //Log.d("DEBUG", "Moving Note!");
-                    int xdelta = (int) event.getX();
-                    int ydelta = (int) event.getY();
-                    this.changeX(xdelta - this.lastDragX);
-                    this.changeY(ydelta - this.lastDragY);
-                    this.lastDragX = xdelta;
-                    this.lastDragY = ydelta;
-                    invalidate();
-                    return true;
-                    //Log.d("DEBUG", "New position: " + (int) event.getX() + ", " + (int) event.getY());
-                }
-                break;
-
-            case MotionEvent.ACTION_UP:
-                long clickDuration = Calendar.getInstance().getTimeInMillis() - this.startClickTime;
-                if (clickDuration < MAX_CLICK_DURATION) {
-                    //this.paintRect.setColor(this.accentColor);
-                    // Show keyboard
-                    Log.d("DEBUG", "Y value: " + event.getY());
-                    if(event.getY() < (hitbox.top + (this.sideLength/3))){
-                        Log.d("DEBUG", "Editing title.");
-                        this.inputDecider = "title";
-                    }
-                    else {
-                        Log.d("DEBUG", "Editing content.");
-
-                        this.inputDecider = "content";
-                    }
-
-                    Log.d("DEBUG", "Trying to open keyboard on: " + this.title);
-                    setupKeyboard();
-                    this.requestFocus();
-                    this.requestFocusFromTouch();
-                    this.imm.showSoftInput(this, InputMethodManager.SHOW_FORCED);
-
-                    this.keyboardExpanded = true;
-                    invalidate();
-                    return true;
-                }
-
-                if (this.selected) {
-                    //Log.d("DEBUG", "TOUCHUP");
-                    this.paintStroke.setColor(this.darkPrimaryColor);
-                    this.selected = false;
-                    invalidate();
-                    return true;
-                }
-
-                break;
-
-        }
-        return false;
     }
 }

@@ -32,21 +32,6 @@ public class NotesGroup extends FrameLayout {
     }
 
 
-    public void toggleKeyboard(Note note, boolean isOpen) {
-        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-
-        try {
-            if(isOpen) {
-                imm.hideSoftInputFromWindow(this.getWindowToken(), 0);
-            }
-            else {
-                imm.showSoftInput(note, InputMethodManager.SHOW_FORCED);
-            }
-        }
-        catch(ArrayIndexOutOfBoundsException a) {
-            Log.d("DEBUG", "Caught AIOUB Exception: Keyboard does not exist");
-        }
-    }
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
@@ -65,8 +50,12 @@ public class NotesGroup extends FrameLayout {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         // Touchevents that are not treated by a note arrive here.
-
-
+        int childCount = getChildCount();
+        // View 0 is the background
+        for (int i = 1; i < childCount; i++) {
+            Note note = (Note) getChildAt(i);
+            note.selected = false;
+        }
         Log.d("DEBUG", "TouchEvent bubbled up!");
         return true;
     }
