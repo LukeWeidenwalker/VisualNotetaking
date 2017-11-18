@@ -3,18 +3,14 @@ package uk.ac.standrews.lw97.ideascape;
 import android.content.Context;
 import android.util.Log;
 import android.view.MotionEvent;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.FrameLayout;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
-
-
 public class NotesGroup extends FrameLayout {
 
     private String tagGroup;
-
 
     NotesGroup(Context context, NoteBase noteBase, String tagGroup) {
         super(context);
@@ -32,11 +28,11 @@ public class NotesGroup extends FrameLayout {
     }
 
 
-
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         int childCount = getChildCount();
-        // View 0 is the background
+        // Adding each note in the notebase to the layout
+        // Remember: View 0 is the background
         for (int i = 1; i < childCount; i++) {
             Note note = (Note) getChildAt(i);
             if (note.checkPositionOverlap(ev.getX(), ev.getY())) {

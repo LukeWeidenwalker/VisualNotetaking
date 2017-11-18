@@ -197,8 +197,8 @@ public class Note extends View {
         }
         canvas.drawRoundRect(this.hitboxStroke, this.sideLength / 6, this.sideLength / 6, this.paintStroke);
         canvas.drawRoundRect(this.hitbox, this.sideLength / 6, this.sideLength / 6, this.paintRect);
-        canvas.drawText(this.title, this.hitbox.left, this.hitbox.top + (this.sideLength / 3), this.paintText);
-        canvas.drawText(this.content, this.hitbox.left, this.hitbox.top + (5 * this.sideLength / 6), this.paintText);
+        canvas.drawText(this.title, this.hitbox.centerX(), this.hitbox.top + (this.sideLength / 3), this.paintText);
+        canvas.drawText(this.content, this.hitbox.centerX(), this.hitbox.top + (5 * this.sideLength / 6), this.paintText);
     }
 
 
@@ -250,6 +250,7 @@ public class Note extends View {
                     collapseKeyboard();
                 }
 
+                // Setting motion variables
                 if (checkPositionOverlap(xEvent, yEvent)) {
                     startClickTime = Calendar.getInstance().getTimeInMillis();
 
@@ -260,9 +261,9 @@ public class Note extends View {
                     // Add a glowing outline to the note when selected
                     return true;
                 }
-                else {
-                    this.selected = false;
-                }
+                //else {
+                    //this.selected = false;
+                //}
                 break;
 
 
