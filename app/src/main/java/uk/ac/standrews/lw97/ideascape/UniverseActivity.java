@@ -29,7 +29,7 @@ public class UniverseActivity extends AppCompatActivity {
         this.notebase.addNote(new Note(this, null, "Luki", new int[] {500, 500}, "Two"));
         this.notebase.addNote(new Note(this, null, "Luki", new int[] {1000, 1000}, "Three"));
 
-        NotesGroup notesGroup = new NotesGroup(this, this.notebase, "None");
+        NotesGroup notesGroup = new NotesGroup(this, this.notebase, "None", user);
 
         setContentView(notesGroup);
     }

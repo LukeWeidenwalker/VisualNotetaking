@@ -35,6 +35,7 @@ public class Note extends View {
     private Paint paintStroke;
     private Paint paintText;
 
+    static int standardSideLength = 300;
     int sideLength;
     int strokeWidth;
     Context context;
@@ -158,6 +159,7 @@ public class Note extends View {
         setOnKeyListener(keyListener);
     }
 
+
     // -------------------
     // Drawing
     // -------------------
@@ -201,29 +203,6 @@ public class Note extends View {
         canvas.drawText(this.content, this.hitbox.centerX(), this.hitbox.top + (5 * this.sideLength / 6), this.paintText);
     }
 
-
-    // -------------------
-    // Misc
-    // -------------------
-
-    boolean checkPositionOverlap(float x, float y) {
-        return (x > this.position[0] && x < this.position[0] + this.sideLength && y > this.position[1] && y < this.position[1] + this.sideLength);
-    }
-
-    public void expandKeyboard() {
-        this.requestFocus();
-        this.requestFocusFromTouch();
-        this.imm.showSoftInput(this, InputMethodManager.SHOW_FORCED);
-        this.keyboardExpanded = true;
-    }
-
-    public void collapseKeyboard() {
-        this.requestFocus();
-        this.requestFocusFromTouch();
-        this.imm.hideSoftInputFromWindow(this.getWindowToken(), 0);
-        this.keyboardExpanded = false;
-    }
-
     @Override
     public void invalidate() {
         super.invalidate();
@@ -231,6 +210,7 @@ public class Note extends View {
                 this.position[0] + sideLength + this.strokeWidth, this.position[1] + sideLength + this.strokeWidth);
         this.hitbox = new RectF(this.position[0], this.position[1], this.position[0] + sideLength, this.position[1] + sideLength);
     }
+
 
     // -------------------
     // Handling Touch Events
@@ -316,6 +296,28 @@ public class Note extends View {
         return false;
     }
 
+
+    // -------------------
+    // Misc
+    // -------------------
+
+    boolean checkPositionOverlap(float x, float y) {
+        return (x > this.position[0] && x < this.position[0] + this.sideLength && y > this.position[1] && y < this.position[1] + this.sideLength);
+    }
+
+    public void expandKeyboard() {
+        this.requestFocus();
+        this.requestFocusFromTouch();
+        this.imm.showSoftInput(this, InputMethodManager.SHOW_FORCED);
+        this.keyboardExpanded = true;
+    }
+
+    public void collapseKeyboard() {
+        this.requestFocus();
+        this.requestFocusFromTouch();
+        this.imm.hideSoftInputFromWindow(this.getWindowToken(), 0);
+        this.keyboardExpanded = false;
+    }
 
 
     // -------------------
