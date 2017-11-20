@@ -25,7 +25,7 @@ public class UniverseActivity extends AppCompatActivity {
 
         this.intentNotes = new HashMap<>();
 
-        Log.d("DEBUG", "Created Universe Activity");
+        Log.d("DEBUG", "Created Constellation Activity");
         if (getIntent() != null) {
             this.user = getIntent().getStringExtra("user");
             this.tag = getIntent().getStringExtra("tag");
@@ -36,13 +36,13 @@ public class UniverseActivity extends AppCompatActivity {
 
 
         Log.d("DEBUG", "Got intent");
-
-        try {
-            notesGroup = new NotesGroup(this, this.intentNotes.get(this.tag), user, "constellation");
-        }
-        catch (Exception e) {
-            notesGroup = new NotesGroup(this, new ArrayList<String[]>(), user, "constellation");
-        }
+        notesGroup = new NotesGroup(this, this.intentNotes.get(this.tag), user, "constellation");
+//        try {
+//            notesGroup = new NotesGroup(this, this.intentNotes.get(this.tag), user, "constellation");
+//        }
+//        catch (Exception e) {
+//            notesGroup = new NotesGroup(this, new ArrayList<String[]>(), user, "constellation");
+//        }
         notesGroup.tagGroup = this.tag;
 
         setContentView(notesGroup);
@@ -61,16 +61,19 @@ public class UniverseActivity extends AppCompatActivity {
 
     public HashMap<String, ArrayList<String[]>> encodeUpstreamIntent() {
         if (this.intentNotes.get(tag) != null) {
-            this.intentNotes.get(tag).clear();
+            this.intentNotes.remove(tag);
         }
-        else {
-            this.intentNotes.put(tag, new ArrayList<String[]>());
-        }
+
+        this.intentNotes.put(tag, new ArrayList<String[]>());
+
         if(!(notesGroup.toArraylist().isEmpty())) {
             for (String[] note : notesGroup.toArraylist()) {
                 this.intentNotes.get(tag).add(note);
             }
         }
+        Log.d("DEBUG", "notesGroup size: " + notesGroup.toArraylist().size());
+
+        Log.d("DEBUG", "Const to Uni size: " + intentNotes.size());
 
         // Let members of this tag group be adjusted.
         return this.intentNotes;

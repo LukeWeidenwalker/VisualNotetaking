@@ -1,6 +1,5 @@
 package uk.ac.standrews.lw97.ideascape;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.PointF;
 import android.util.Log;
@@ -28,29 +27,35 @@ public class NotesGroup extends FrameLayout {
     NotesGroup(Context context, NoteBase noteBase, String user, String displayingActivity) {
         super(context);
         this.addView(new Background(context));
-        this.addViews(noteBase);
+        setDisplayingActivity(displayingActivity);
         this.noteBase = noteBase;
         this.user = user;
+        if(noteBase != null) {
+            this.addViews(noteBase);
+        }
+
         mActivePointers = new SparseArray<>();
-        setDisplayingActivity(displayingActivity);
     }
 
 
     NotesGroup(Context context, ArrayList<String[]> notesArray, String user, String displayingActivity) {
         super(context);
         this.addView(new Background(context));
-        this.addViews(notesArray);
-        this.user = user;
-        mActivePointers = new SparseArray<>();
         setDisplayingActivity(displayingActivity);
+        this.user = user;
+        if (!(notesArray == null)) {
+            this.addViews(notesArray);
+        }
+        mActivePointers = new SparseArray<>();
     }
-
 
 
     void addViews(NoteBase noteBase) {
         HashMap<String, ArrayList<Note>> tagDictionary = noteBase.getAllNotes();
         for (String tagGroup : tagDictionary.keySet()) {
             for (Note note : tagDictionary.get(tagGroup)) {
+                Log.d("DEBUG", "!!! Adding views from notebase");
+
                 note.setParentNoteGroup(this);
                 note.setDisplayingActivity(this.displayingActivity);
                 this.addView(note);
@@ -81,7 +86,6 @@ public class NotesGroup extends FrameLayout {
         }
         return asArrayList;
     }
-
 
 
 
@@ -203,7 +207,6 @@ public class NotesGroup extends FrameLayout {
                         backToMainActivity();
                     }
 
-                    //launchMainActivity();
                     zoomCounter = 0;
                 }
 

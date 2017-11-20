@@ -29,7 +29,6 @@ public class NoteBase {
         this.context = context;
         this.user = user;
         this.tagDictionary = new HashMap<>();
-        loadNotes();
     }
 
 

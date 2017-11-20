@@ -192,10 +192,11 @@ public class Note extends View {
         this.paintText.setColor(this.primaryColor);
         this.paintText.setTextAlign(Paint.Align.CENTER);
         this.paintText.setTextSize(72);
-
-        if (this.displayingActivity.equals("constellation")) {
-            Typeface bold = Typeface.createFromAsset(this.context.getAssets(), "fonts/AppleSDGothicNeo.ttc");
-            this.paintText.setTypeface(bold);
+        if (this.displayingActivity != null) {
+            if (this.displayingActivity.equals("constellation")) {
+                Typeface bold = Typeface.createFromAsset(getContext().getAssets(), "fonts/AppleSDGothicNeo.ttc");
+                this.paintText.setTypeface(bold);
+            }
         }
     }
 
@@ -206,9 +207,13 @@ public class Note extends View {
             if (this.displayingActivity.equals("constellation")) {
                 onDrawConstellation(canvas);
             }
+            else {
+                onDrawUniverse(canvas);
+            }
         }
         else {
-            onDrawUniverse(canvas);
+            Log.d("DEBUG", "Mistake here");
+
         }
     }
 
@@ -219,6 +224,8 @@ public class Note extends View {
         else {
             this.paintStroke.setColor(this.invisibleColor);
         }
+        this.hitbox = new RectF(this.position[0], this.position[1], this.position[0] + sideLength, this.position[1] + sideLength);
+
         canvas.drawRoundRect(this.hitboxStroke, this.sideLength / 6, this.sideLength / 6, this.paintStroke);
         canvas.drawRoundRect(this.hitbox, this.sideLength / 6, this.sideLength / 6, this.paintRect);
         canvas.drawText(this.title, this.hitbox.centerX(), this.hitbox.top + (this.sideLength / 3), this.paintText);
@@ -228,6 +235,7 @@ public class Note extends View {
     }
 
     public void onDrawUniverse(Canvas canvas) {
+        this.hitbox = this.star;
         canvas.drawRoundRect(this.star, 5, 5, this.paintText);
         this.paintText.setTextSize(24);
         canvas.drawText(this.tag, this.star.centerX() + 30, this.star.centerY() - 30, this.paintText);

@@ -18,11 +18,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("DEBUG", "Created Universe Activity");
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 
         if(getIntent() != null) {
             this.user = getIntent().getStringExtra("user");
             if (getIntent().getSerializableExtra("overallNotebase") != null) {
-                this.notebase = new NoteBase(this, null, this.user);
+                Log.d("DEBUG", "Received Hashmap intent");
+                Log.d("DEBUG", "Created notebase");
                 decodeUpstreamIntent((HashMap<String, ArrayList<String[]>>) getIntent().getSerializableExtra("overallNotebase"), getIntent().getStringExtra("user"));
             }
             else {
@@ -34,16 +38,12 @@ public class MainActivity extends AppCompatActivity {
             this.notebase = new NoteBase(this, null, this.user);
         }
 
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-
-        Log.d("DEBUG", "Created Universe Activity");
-        Log.d("DEBUG", "Got intent");
-
-        Log.d("DEBUG", "Created notebase");
+        Log.d("DEBUG", "Loading Notes group from Notebase");
+        Log.d("DEBUG", "Size notebase " + notebase.tagDictionary.size());
 
         notesGroup = new NotesGroup(this, this.notebase, user, "universe");
         notesGroup.tagGroup = "None";
+        Log.d("DEBUG", "Childcount: "  + notesGroup.getChildCount());
 
         setContentView(notesGroup);
     }
@@ -89,6 +89,8 @@ public class MainActivity extends AppCompatActivity {
                 this.notebase.tagDictionary.get(tag).add(note);
             }
         }
+        Log.d("DEBUG", "Main Actvity - Notebase Size: " + this.notebase.tagDictionary.size());
+
     }
 
 

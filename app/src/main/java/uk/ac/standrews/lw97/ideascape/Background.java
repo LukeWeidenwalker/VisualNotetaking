@@ -12,7 +12,7 @@ public class Background extends AppCompatImageView {
 
     Background(Context context, int backgroundColor) {
         super(context);
-        backgroundImage = Bitmap.createBitmap(UniverseActivity.getScreenWidth(), UniverseActivity.getScreenHeight(), Bitmap.Config.ARGB_8888);
+        backgroundImage = Bitmap.createBitmap(MainActivity.getScreenWidth(), MainActivity.getScreenHeight(), Bitmap.Config.ARGB_8888);
         backgroundImage.eraseColor(backgroundColor);
         this.setImageBitmap(this.backgroundImage);
     }
@@ -21,7 +21,7 @@ public class Background extends AppCompatImageView {
     Background(Context context) {
         super(context);
         Bitmap b = BitmapFactory.decodeResource(getResources(), R.drawable.galaxy_bg_1);
-        this.backgroundImage = Bitmap.createScaledBitmap(b, UniverseActivity.getScreenWidth() + 128, UniverseActivity.getScreenHeight(), false);
+        this.backgroundImage = Bitmap.createScaledBitmap(b, MainActivity.getScreenWidth() + 128, MainActivity.getScreenHeight(), false);
         this.setImageBitmap(this.backgroundImage);
     }
 }
