@@ -112,6 +112,9 @@ public class Note extends View {
         else if (inputDecider.equals("content")) {
             setContent(mText);
         }
+        else if (inputDecider.equals("tag")) {
+            setTag(mText);
+        }
         return true;
     }
 
@@ -121,6 +124,9 @@ public class Note extends View {
         }
         else if (inputDecider.equals("content")){
             mText = content;
+        }
+        else if (inputDecider.equals("tag")) {
+            mText = "";
         }
         return true;
     }
@@ -228,10 +234,13 @@ public class Note extends View {
 
         canvas.drawRoundRect(this.hitboxStroke, this.sideLength / 6, this.sideLength / 6, this.paintStroke);
         canvas.drawRoundRect(this.hitbox, this.sideLength / 6, this.sideLength / 6, this.paintRect);
-        canvas.drawText(this.title, this.hitbox.centerX(), this.hitbox.top + (this.sideLength / 3), this.paintText);
-        canvas.drawText(this.content, this.hitbox.centerX(), this.hitbox.top + (5 * this.sideLength / 6), this.paintText);
-        canvas.drawText("Constellation: " + tag, 600, 65, paintText);
+        this.paintText.setTextSize(48);
+        canvas.drawText(this.title, this.hitbox.centerX(), this.hitbox.top + (this.sideLength / 6), this.paintText);
 
+        this.paintText.setTextSize(24);
+        canvas.drawText(this.content, this.hitbox.centerX(), this.hitbox.top + (this.sideLength / 3), this.paintText);
+        this.paintText.setTextSize(78);
+        canvas.drawText("Constellation", 600, 65, paintText);
     }
 
     public void onDrawUniverse(Canvas canvas) {
@@ -252,6 +261,12 @@ public class Note extends View {
                 this.position[0] + sideLength + this.strokeWidth, this.position[1] + sideLength + this.strokeWidth);
         this.hitbox = new RectF(this.position[0], this.position[1], this.position[0] + sideLength, this.position[1] + sideLength);
         this.star = new RectF(this.position[0], this.position[1], this.position[0] + this.starRadius, this.position[1] + this.starRadius);
+
+        // Remove by dragging to left top corner
+        if (this.position[0] < 30 && this.position[1] < 30) {
+            parentNoteGroup.removeView(this);
+            //parentNoteGroup.noteBase.tagDictionary.get(tag).remove(this);
+        }
     }
 
 
@@ -309,22 +324,30 @@ public class Note extends View {
                 long clickDuration = Calendar.getInstance().getTimeInMillis() - this.startClickTime;
                 if (clickDuration < MAX_CLICK_DURATION) {
                     Log.d("DEBUG", "Y value: " + event.getY());
-                    if(event.getY() < (hitbox.top + (this.sideLength/3))){
-                        Log.d("DEBUG", "Editing title.");
-                        this.inputDecider = "title";
+                    if (this.displayingActivity != null) {
+                        if (this.displayingActivity.equals("constellation")) {
+                            if(event.getY() < (hitbox.top + (this.sideLength/3))){
+                                Log.d("DEBUG", "Editing title.");
+                                this.inputDecider = "title";
+                            }
+                            else if (event.getX() > (hitbox.right - (70)) && event.getY() < (hitbox.bottom - (70))) {
+                                Log.d("DEBUG", "Editing tag.");
+                                this.inputDecider = "tag";
+                            }
+                            else {
+                                Log.d("DEBUG", "Editing content.");
+
+                                this.inputDecider = "content";
+                            }
+
+                            Log.d("DEBUG", "Trying to open keyboard on: " + this.title);
+
+                            initMText();
+                            expandKeyboard();
+                            invalidate();
+                            return true;
+                        }
                     }
-                    else {
-                        Log.d("DEBUG", "Editing content.");
-
-                        this.inputDecider = "content";
-                    }
-
-                    Log.d("DEBUG", "Trying to open keyboard on: " + this.title);
-
-                    initMText();
-                    expandKeyboard();
-                    invalidate();
-                    return true;
                 }
 
                 if (this.selected) {
