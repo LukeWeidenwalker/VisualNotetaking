@@ -1,5 +1,6 @@
 package uk.ac.standrews.lw97.ideascape;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.PointF;
 import android.util.Log;
@@ -13,35 +14,76 @@ import java.util.HashMap;
 
 public class NotesGroup extends FrameLayout {
 
-    private String tagGroup;
+    public String tagGroup;
     long startClickTime;
     long firstClickTime = 0;
     int numberClicks;
     NoteBase noteBase;
     String user;
     SparseArray<PointF> mActivePointers;
-    double differencePoints;
-    int pinchCounter;
+    int zoomCounter;
+    String displayingActivity;
 
 
-
-    NotesGroup(Context context, NoteBase noteBase, String tagGroup, String user) {
+    NotesGroup(Context context, NoteBase noteBase, String user, String displayingActivity) {
         super(context);
-        this.tagGroup = tagGroup;
         this.addView(new Background(context));
         this.addViews(noteBase);
         this.noteBase = noteBase;
         this.user = user;
         mActivePointers = new SparseArray<>();
+        setDisplayingActivity(displayingActivity);
     }
+
+
+    NotesGroup(Context context, ArrayList<String[]> notesArray, String user, String displayingActivity) {
+        super(context);
+        this.addView(new Background(context));
+        this.addViews(notesArray);
+        this.user = user;
+        mActivePointers = new SparseArray<>();
+        setDisplayingActivity(displayingActivity);
+    }
+
+
 
     void addViews(NoteBase noteBase) {
         HashMap<String, ArrayList<Note>> tagDictionary = noteBase.getAllNotes();
-        for (Note note : tagDictionary.get(tagGroup)) {
-            note.setParentNoteGroup(this);
-            this.addView(note);
+        for (String tagGroup : tagDictionary.keySet()) {
+            for (Note note : tagDictionary.get(tagGroup)) {
+                note.setParentNoteGroup(this);
+                note.setDisplayingActivity(this.displayingActivity);
+                this.addView(note);
+            }
         }
     }
+
+
+    void addViews(ArrayList<String[]> noteArray) {
+        // Add views that are passed over as an intent
+        for (String[] note : noteArray) {
+            Note newNote = new Note(getContext(), null, note, this.displayingActivity);
+
+            newNote.setParentNoteGroup(this);
+            newNote.setDisplayingActivity(this.displayingActivity);
+            this.addView(newNote);
+        }
+    }
+
+
+    public ArrayList<String[]> toArraylist() {
+        ArrayList<String[]> asArrayList = new ArrayList<>();
+        int childCount = getChildCount();
+
+        for(int i = 1; i < childCount; i++) {
+            Note newNote = (Note) getChildAt(i);
+            asArrayList.add(newNote.saveNote());
+        }
+        return asArrayList;
+    }
+
+
+
 
     public void unselectNotes() {
         int childCount = getChildCount();
@@ -51,31 +93,6 @@ public class NotesGroup extends FrameLayout {
             note.selected = false;
         }
     }
-
-
-    @Override
-    public boolean onInterceptTouchEvent(MotionEvent event) {
-        // Detect pinch gestures
-        // As in http://www.vogella.com/tutorials/AndroidTouch/article.html#exercise-multitouch.
-
-
-
-
-        // Proceed normally if only one pointer is detected.
-
-//        int childCount = getChildCount();
-//        // Dispatching touch events to any child views that are touched
-//        // Remember: View 0 is the background
-//        for (int i = 1; i < childCount; i++) {
-//            Note note = (Note) getChildAt(i);
-//            if (note.checkPositionOverlap(event.getX(), event.getY())) {
-//                note.dispatchTouchEvent(event);
-//                break;
-//            }
-//        }
-        return false;
-    }
-
 
 
     public void singleTouch(MotionEvent event) {
@@ -109,11 +126,12 @@ public class NotesGroup extends FrameLayout {
                         if (this.numberClicks >= 2) {
                             // TODO: Fix non-reset after one click
                             Log.d("DEBUG", "Detected Double-Tap");
-                            int[] position = new int[]{(int) event.getX() - Note.standardSideLength / 2, (int) event.getY() - Note.standardSideLength / 2};
-                            Note note = new Note(getContext(), null, user, position, "New");
-                            note.setParentNoteGroup(this);
-                            this.addView(note);
-                            this.noteBase.addNote(note);
+                            if (this.displayingActivity.equals("constellation")) {
+                                int[] position = new int[]{(int) event.getX() - Note.standardSideLength / 2, (int) event.getY() - Note.standardSideLength / 2};
+                                Note note = new Note(getContext(), null, user, position, "New", "constellation");
+                                note.setParentNoteGroup(this);
+                                this.addView(note);
+                            }
                             firstClickTime = 0;
                             numberClicks = 0;
                         }
@@ -142,30 +160,28 @@ public class NotesGroup extends FrameLayout {
                 break;
             }
 
-            // a pointer was moved
+            // A pointer was moved.
             case MotionEvent.ACTION_MOVE: {
-                //Log.d("DEBUG", "Multiple Pointers: MOVED");
                 double[][] distances = new double[2][2];
                 for (int size = event.getPointerCount(), i = 0; i < size; i++) {
                     PointF point = mActivePointers.get(event.getPointerId(i));
                     if (point != null) {
                         distances[i][0] = (event.getX(i) - point.x);
                         distances[i][1] = (event.getY(i) - point.y);
+
+                        // Set saved previous point to current point.
                         point.x = event.getX(i);
                         point.y = event.getY(i);
                     }
                 }
 
                 try {
-                    Log.d("DEBUG", "Total distance: " + (Math.abs(distances[0][0]) + Math.abs(distances[1][0]) + Math.abs(distances[0][1]) + Math.abs(distances[1][1])));
-                    Log.d("DEBUG", "XOffset: " + (Math.abs(distances[0][0] + distances[1][0])));
-                    Log.d("DEBUG", "YOffset: " + (Math.abs(distances[0][1] + distances[1][1])));
-
-
-                    if (Math.abs((distances[0][0] + distances[1][0])) < 2.6 && Math.abs(distances[0][1] + distances[1][1]) < 3) {
+                    // Check if the two movements offset each other
+                    if (Math.abs((distances[0][0] + distances[1][0])) < 2.6 && Math.abs(distances[0][1] + distances[1][1]) < 2.6) {
+                        // Not signal on minor movement
                         if (Math.abs(distances[0][0]) + Math.abs(distances[1][0]) + Math.abs(distances[0][1]) + Math.abs(distances[1][1]) > 0.5) {
-                            pinchCounter++;
-                            Log.d("DEBUG", "Pinchcounter: " + pinchCounter);
+                            zoomCounter++;
+                            Log.d("DEBUG", "Zoom in counter: " + zoomCounter);
                         }
                     }
                 }
@@ -178,9 +194,17 @@ public class NotesGroup extends FrameLayout {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_POINTER_UP:
             case MotionEvent.ACTION_CANCEL: {
-                if (pinchCounter >= 4) {
-                    Log.d("DEBUG", "Pinch detected");
-                    pinchCounter = 0;
+                if (zoomCounter >= 2) {
+                    Log.d("DEBUG", "ZoomIn detected");
+                    if (this.displayingActivity.equals("universe")) {
+                        goToConstellationActivity();
+                    }
+                    if (this.displayingActivity.equals("constellation")) {
+                        backToMainActivity();
+                    }
+
+                    //launchMainActivity();
+                    zoomCounter = 0;
                 }
 
                 Log.d("DEBUG", "Multiple Pointers: UP");
@@ -205,5 +229,22 @@ public class NotesGroup extends FrameLayout {
         }
 
         return true;
+    }
+
+
+    public void backToMainActivity() {
+        Log.d("DEBUG", "Going back to main");
+        ((UniverseActivity) getContext()).launchMainActivity();
+
+    }
+
+
+    public void goToConstellationActivity() {
+        ((MainActivity) getContext()).launchUniverseActivity(this.tagGroup);
+    }
+
+
+    public void setDisplayingActivity(String displayingActivity) {
+        this.displayingActivity = displayingActivity;
     }
 }

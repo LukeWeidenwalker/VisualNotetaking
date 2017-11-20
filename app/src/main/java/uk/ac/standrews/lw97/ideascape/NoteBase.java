@@ -1,12 +1,8 @@
 package uk.ac.standrews.lw97.ideascape;
 
 import android.content.Context;
-import android.graphics.Canvas;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -16,14 +12,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Observable;
 
 
 public class NoteBase {
     // Datastructure to hold all Notes a user has made on a canvas
     private String user;
     // Organise notes into tag groups to allow for more efficient retrieval.
-    private HashMap<String, ArrayList<Note>> tagDictionary;
+    public HashMap<String, ArrayList<Note>> tagDictionary;
     private Context context;
     private AttributeSet attrs;
 
@@ -75,7 +70,7 @@ public class NoteBase {
                         this.tagDictionary.put(valuesLine[7], new ArrayList<Note>());
                     }
 
-                    this.tagDictionary.get(valuesLine[valuesLine.length-1]).add(new Note(context, attrs, valuesLine));
+                    this.tagDictionary.get(valuesLine[valuesLine.length-1]).add(new Note(context, attrs, valuesLine, "universe"));
                 }
             }
         }

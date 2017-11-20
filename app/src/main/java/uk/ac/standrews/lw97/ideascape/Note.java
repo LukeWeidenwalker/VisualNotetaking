@@ -15,6 +15,7 @@ import java.util.Calendar;
 
 
 public class Note extends View {
+    String displayingActivity;
     String title;
     String content;
     String tag;
@@ -30,6 +31,8 @@ public class Note extends View {
 
     private RectF hitbox;
     private RectF hitboxStroke;
+    private RectF star;
+
 
     private Paint paintRect;
     private Paint paintStroke;
@@ -37,6 +40,7 @@ public class Note extends View {
 
     static int standardSideLength = 300;
     int sideLength;
+    int starRadius;
     int strokeWidth;
     Context context;
 
@@ -62,7 +66,7 @@ public class Note extends View {
     // -------------------
     // Constructors
     // -------------------
-    public Note(Context context, AttributeSet attrs, String user, int[] position, String title) {
+    public Note(Context context, AttributeSet attrs, String user, int[] position, String title, String displayingActivity) {
         super(context, attrs);
         this.context = context;
         this.title = title;
@@ -73,12 +77,13 @@ public class Note extends View {
         this.timestamp = NoteBase.getTimeStamp();
         this.user = user;
         this.selected = false;
+        this.displayingActivity = displayingActivity;
         setupDrawing();
         setupKeyboard();
 
     }
 
-    public Note(Context context, AttributeSet attrs, String[] valuesLine) {
+    public Note(Context context, AttributeSet attrs, String[] valuesLine, String displayingActivity) {
         super(context, attrs);
         this.position = new int[2];
         this.user = valuesLine[0];
@@ -90,6 +95,7 @@ public class Note extends View {
         this.status = Integer.parseInt(valuesLine[6]);
         this.tag = valuesLine[7];
         this.selected = false;
+        this.displayingActivity = displayingActivity;
 
         setupDrawing();
         setupKeyboard();
@@ -143,7 +149,7 @@ public class Note extends View {
         // As in https://stackoverflow.com/questions/27717531/get-input-text-with-customview-without-edittext-android
         setFocusable(true);
         setFocusableInTouchMode(true);
-        this.imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+        this.imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
 
         initMText();
 
@@ -165,13 +171,15 @@ public class Note extends View {
     // -------------------
     public void setupDrawing() {
         // Setup how it will be drawn
-        Typeface bold = Typeface.createFromAsset(this.context.getAssets(), "fonts/AppleSDGothicNeo.ttc");
+
 
         this.sideLength = 300;
+        this.starRadius = 20;
         this.strokeWidth = 2;
         this.hitbox = new RectF(this.position[0], this.position[1], this.position[0] + sideLength, this.position[1] + sideLength);
         this.hitboxStroke = new RectF(this.position[0] - this.strokeWidth, this.position[1] - this.strokeWidth,
                 this.position[0] + sideLength + this.strokeWidth, this.position[1] + sideLength + this.strokeWidth);
+        this.star = new RectF(this.position[0], this.position[1], this.position[0] + this.starRadius, this.position[1] + this.starRadius);
 
         this.midX = this.position[0] + (this.sideLength / 2);
         this.midY = this.position[1] + (this.sideLength / 2);
@@ -180,17 +188,31 @@ public class Note extends View {
         this.paintStroke = new Paint();
         this.paintStroke.setColor(this.darkPrimaryColor);
         //this.paintStroke.setShader(new LinearGradient(0, 0, 0, getHeight(), this.darkPrimaryColor, this.accentColor, Shader.TileMode.MIRROR));
-
         this.paintText = new Paint();
         this.paintText.setColor(this.primaryColor);
-        this.paintText.setTypeface(bold);
-        this.paintText.setTextSize(72);
         this.paintText.setTextAlign(Paint.Align.CENTER);
+        this.paintText.setTextSize(72);
+
+        if (this.displayingActivity.equals("constellation")) {
+            Typeface bold = Typeface.createFromAsset(this.context.getAssets(), "fonts/AppleSDGothicNeo.ttc");
+            this.paintText.setTypeface(bold);
+        }
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        if (this.displayingActivity != null) {
+            if (this.displayingActivity.equals("constellation")) {
+                onDrawConstellation(canvas);
+            }
+        }
+        else {
+            onDrawUniverse(canvas);
+        }
+    }
+
+    public void onDrawConstellation(Canvas canvas) {
         if(selected) {
             this.paintStroke.setColor(this.accentColor);
         }
@@ -201,6 +223,18 @@ public class Note extends View {
         canvas.drawRoundRect(this.hitbox, this.sideLength / 6, this.sideLength / 6, this.paintRect);
         canvas.drawText(this.title, this.hitbox.centerX(), this.hitbox.top + (this.sideLength / 3), this.paintText);
         canvas.drawText(this.content, this.hitbox.centerX(), this.hitbox.top + (5 * this.sideLength / 6), this.paintText);
+        canvas.drawText("Constellation: " + tag, 600, 65, paintText);
+
+    }
+
+    public void onDrawUniverse(Canvas canvas) {
+        canvas.drawRoundRect(this.star, 5, 5, this.paintText);
+        this.paintText.setTextSize(24);
+        canvas.drawText(this.tag, this.star.centerX() + 30, this.star.centerY() - 30, this.paintText);
+        this.paintText.setTextSize(78);
+        canvas.drawText("Universe", 600, 120, paintText);
+
+
     }
 
     @Override
@@ -209,6 +243,7 @@ public class Note extends View {
         this.hitboxStroke = new RectF(this.position[0] - this.strokeWidth, this.position[1] - this.strokeWidth,
                 this.position[0] + sideLength + this.strokeWidth, this.position[1] + sideLength + this.strokeWidth);
         this.hitbox = new RectF(this.position[0], this.position[1], this.position[0] + sideLength, this.position[1] + sideLength);
+        this.star = new RectF(this.position[0], this.position[1], this.position[0] + this.starRadius, this.position[1] + this.starRadius);
     }
 
 
@@ -360,6 +395,10 @@ public class Note extends View {
 
     public void setParentNoteGroup(NotesGroup parentNoteGroup) {
         this.parentNoteGroup = parentNoteGroup;
+    }
+
+    public void setDisplayingActivity(String act) {
+        this.displayingActivity = act;
     }
 
     public String[] saveNote() {
